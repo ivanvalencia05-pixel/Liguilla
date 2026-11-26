@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sorteo Quiniela Liga MX</title>
+<style>
+  :root{--verde:#0b6e3a;--oscuro:#08301c;--dorado:#f4c430;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(160deg,var(--oscuro),var(--verde));color:#fff;min-height:100vh;padding:20px}
+  h1{text-align:center;margin:10px 0 4px}
+  p.sub{text-align:center;margin:0 0 20px;opacity:.85}
+  .wrap{max-width:1000px;margin:auto}
+  .card{background:rgba(255,255,255,.1);border-radius:14px;padding:18px;margin-bottom:18px}
+  h2{margin-top:0;color:var(--dorado);font-size:1.1rem}
+  .inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+  input{padding:10px;border-radius:8px;border:none;font-size:1rem;width:100%}
+  .teams{display:flex;flex-wrap:wrap;gap:8px}
+  .team{background:#fff;color:#111;padding:8px 12px;border-radius:20px;font-weight:600;font-size:.9rem}
+  .team.sel{outline:3px solid var(--dorado)}
+  button{background:var(--dorado);color:#222;border:none;padding:12px 22px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin:4px}
+  button.sec{background:#fff}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .center{text-align:center}
+  #actual{font-size:1.6rem;text-align:center;min-height:50px;font-weight:700;color:var(--dorado)}
+  .players{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .player{background:#fff;color:#111;border-radius:12px;padding:14px;min-height:140px}
+  .player h3{margin:0 0 8px;color:var(--verde);border-bottom:2px solid var(--dorado);padding-bottom:6px}
+  .player div.t{padding:6px 0;font-weight:600;animation:pop .5s}
+  @keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+  textarea{width:100%;border-radius:8px;padding:8px}
+
+  .bracket{display:grid;grid-template-columns:repeat(3,minmax(250px,1fr));gap:16px;overflow-x:auto}
+  .col h3{text-align:center;margin:0 0 10px;color:var(--dorado)}
+  .serie{background:#fff;color:#111;border-radius:12px;padding:10px;margin-bottom:12px}
+  .serie .eq{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-weight:700}
+  .serie .eq.win{color:var(--verde)}
+  .serie .eq.lose{color:#999;text-decoration:line-through}
+  .serie .eq small{font-weight:600;color:#fff;background:var(--verde);border-radius:10px;padding:1px 8px;margin-left:6px;font-size:.7rem}
+  .serie .eq.tbd{color:#888;font-style:italic;font-weight:500}
+  .marcador{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:center;font-size:.8rem;margin-top:6px}
+  .marcador input{padding:5px;text-align:center;border:1px solid #ccc;font-size:.9rem}
+  .agg{text-align:right;font-size:.8rem;font-weight:700;margin-top:6px;color:#555}
+  .player div.t.out{text-decoration:line-through;color:#999}
+  .player div.t.champ{color:#b8860b;font-size:1.05rem}
+  .opt{text-align:center;margin-bottom:12px;font-size:.9rem}
+  .opt select{padding:6px;border-radius:6px}
+  @media(max-width:800px){.bracket{grid-template-columns:1fr}}
+
+  .logo{width:28px;height:28px;object-fit:contain;vertical-align:middle;margin-right:6px;flex:none}
+  .ins{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;margin-right:6px;vertical-align:middle;border:2px solid rgba(0,0,0,.15);flex:none}
+  .team .logo,.team .ins{width:22px;height:22px;font-size:.6rem}
+  .serie .eq>span:first-child{display:flex;align-items:center;flex-wrap:wrap}
+
+  .hd{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .hd h2{margin:0}
+  .hd button{margin:0;padding:8px 14px;font-size:.9rem}
+  .oculto{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⚽ Sorteo Quiniela Liga MX</h1>
+  <p class="sub">8 equipos · 4 participantes · 2 equipos cada uno</p>
+
+  <div class="card">
+    <h2>1. Participantes</h2>
+    <div class="inputs">
+      <input id="p0" placeholder="Persona 1" value="Persona 1">
+      <input id="p1" placeholder="Persona 2" value="Persona 2">
+      <input id="p2" placeholder="Persona 3" value="Persona 3">
+      <input id="p3" placeholder="Persona 4" value="Persona 4">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Equipos de la Liguilla (en orden de la tabla: 1° al 8°)</h2>
+    <p style="margin-top:0;font-size:.9rem">Un equipo por línea, del 1° al 8° lugar de la tabla (exactamente 8). Por defecto: Liguilla Apertura 2026.</p>
+    <textarea id="equiposTxt" rows="8">Chivas
+Cruz Azul
+América
+Atlas
+Toluca
+Monterrey
+León
+Pachuca</textarea>
+    <div class="teams" id="listaEquipos" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card center">
+    <div id="actual">Listo para sortear</div>
+    <button id="btnPaso">Sortear equipo por equipo</button>
+    <button id="btnTodo">Sortear todo</button>
+    <button class="sec" id="btnReset">Reiniciar</button>
+  </div>
+
+  <div class="card">
+    <div class="hd"><h2>3. Liguilla: cruces y marcadores</h2><button class="sec" id="btnOcultar">🙈 Ocultar cruces y marcadores</button></div>
+    <div id="liguillaBody" style="margin-top:12px">
+    <div class="opt">Semifinales:
+      <select id="modo"><option value="fijo">Cuadro fijo (1/8 vs 4/5 · 2/7 vs 3/6)</option><option value="reseed">Reclasificación (mejor vs peor)</option></select>
+    </div>
+    <p style="text-align:center;font-size:.85rem;margin-top:0">Captura los goles de ida y vuelta; el ganador avanza solo. Si el global empata, avanza el mejor ubicado en la tabla. <button class="sec" id="btnLimpiar" style="padding:4px 10px;font-size:.8rem">Borrar marcadores</button></p>
+    <div class="bracket" id="bracket"></div>
+    </div>
+    <p id="liguillaOculta" class="oculto center" style="margin:12px 0 0">Los cruces y marcadores están ocultos.</p>
+  </div>
+
+  <div class="card">
+    <h2>Resultados</h2>
+    <div class="players" id="resultados"></div>
+    <div class="center" style="margin-top:14px">
+      <button class="sec" id="btnCopiar" disabled>Copiar resultados</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let equipos = [], pendientes = [], asignados = [[],[],[],[]], turno = 0, ocupado = false;
+
+function nombres(){ return [0,1,2,3].map(i => $('p'+i).value.trim() || 'Persona '+(i+1)); }
+
+function leerEquipos(){
+  equipos = $('equiposTxt').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  $('listaEquipos').innerHTML = equipos.map(e=>`<span class="team">${logo(e)}${e}</span>`).join('');
+}
+
+// Fisher-Yates con aleatoriedad criptográfica
+function rnd(n){ const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]%n; }
+function mezclar(arr){ for(let i=arr.length-1;i>0;i--){const j=rnd(i+1);[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+
+
+
+// ======== Logotipos ========
+// Coloca los escudos en la carpeta /logos junto a index.html, con el nombre del equipo en minúsculas,
+// sin acentos y con guiones. Ej.: logos/chivas.png, logos/cruz-azul.png, logos/america.png
+// Si no existe el archivo, se muestra una insignia con las iniciales (fallback).
+const EXT = 'png';
+const COLORES = {
+  'chivas':['#c8102e','#fff'],'cruz azul':['#0033a0','#fff'],'america':['#ffd100','#002b7f'],
+  'atlas':['#b00020','#111'],'toluca':['#d71920','#fff'],'monterrey':['#002b5c','#fff'],
+  'leon':['#00814b','#fff'],'pachuca':['#1b3f94','#fff'],'tigres':['#f6a800','#003a8c'],
+  'pumas unam':['#002b5c','#c9a227'],'pumas':['#002b5c','#c9a227']
+};
+const norm = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\(.*?\)/g,'').trim();
+const slug = t => norm(t).replace(/\s+/g,'-');
+function iniciales(t){ const p=norm(t).split(/\s+/); return (p.length>1? p[0][0]+p[1][0] : p[0].slice(0,2)).toUpperCase(); }
+function insignia(t){
+  const [bg,fg]=COLORES[norm(t)]||['#555','#fff'];
+  return `<span class="ins" style="background:${bg};color:${fg}">${iniciales(t)}</span>`;
+}
+window.logoFallback = (img,t)=>{ img.outerHTML = insignia(t); };
+function logo(t){
+  const safe = t.replace(/'/g,"\\'");
+  return `<img class="logo" src="logos/${slug(t)}.${EXT}" alt="${t}" loading="lazy" onerror="logoFallback(this,'${safe}')">`;
+}
+
+// ======== Persistencia ========
+const KEY='quinielaLigaMX_v2';
+let marcadores = {}; // id -> [[a1,b1],[a2,b2]] (a = mejor sembrado, b = peor sembrado)
+function guardar(){
+  localStorage.setItem(KEY, JSON.stringify({
+    nombres:nombres(), equiposTxt:$('equiposTxt').value, pendientes, asignados, turno,
+    marcadores, modo:$('modo').value
+  }));
+}
+function cargar(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY)||'null'); if(!d) return false;
+    d.nombres.forEach((n,i)=>$('p'+i).value=n);
+    $('equiposTxt').value = d.equiposTxt; leerEquipos();
+    pendientes=d.pendientes; asignados=d.asignados; turno=d.turno;
+    marcadores=d.marcadores||{}; $('modo').value=d.modo||'fijo';
+    return true;
+  }catch(e){return false;}
+}
+
+// ======== Liguilla ========
+const seed = t => equipos.indexOf(t);
+const mejor = (a,b)=> seed(a)<seed(b)?a:b;
+const peor  = (a,b)=> seed(a)<seed(b)?b:a;
+const dueño = t => { for(let i=0;i<4;i++) if(asignados[i].includes(t)) return nombres()[i]; return null; };
+
+function serie(id,A,B){
+  if(!A||!B) return {id,A,B,w:null};
+  [A,B] = [mejor(A,B), peor(A,B)];       // A = mejor sembrado
+  const m = marcadores[id]||[[],[]];
+  const ok = m.every(l=>l.length===2 && l.every(v=>v!==''&&v!==null&&v!==undefined&&!isNaN(v)));
+  const ga = ok? +m[0][0] + +m[1][0] : null, gb = ok? +m[0][1] + +m[1][1] : null;
+  let w=null, desempate=false;
+  if(ok){ if(ga>gb) w=A; else if(gb>ga) w=B; else {w=A; desempate=true;} }
+  return {id,A,B,w,ga,gb,desempate};
+}
+function calcular(){
+  const q = [[0,7],[1,6],[2,5],[3,4]].map((p,i)=>serie('Q'+(i+1),equipos[p[0]],equipos[p[1]]));
+  const W = i=>q[i].w;
+  let s1,s2;
+  if($('modo').value==='fijo'){
+    s1=serie('S1',W(0),W(3)); s2=serie('S2',W(1),W(2));
+  }else{
+    const v=[W(0),W(1),W(2),W(3)];
+    if(v.every(Boolean)){
+      const o=[...v].sort((a,b)=>seed(a)-seed(b));
+      s1=serie('S1',o[0],o[3]); s2=serie('S2',o[1],o[2]);
+    } else { s1=serie('S1',null,null); s2=serie('S2',null,null); }
+  }
+  const f = serie('F',s1.w,s2.w);
+  return {q,s:[s1,s2],f};
+}
+function estado(t){
+  const r=calcular();
+  const todas=[...r.q,...r.s,r.f];
+  if(r.f.w===t) return 'champ';
+  for(const s of todas) if(s.w && (s.A===t||s.B===t) && s.w!==t) return 'out';
+  return 'vivo';
+}
+
+function chip(t){ const d=dueño(t); return d?`<small>${d}</small>`:''; }
+function filaEq(t,s,ladoGoles){
+  if(!t) return `<div class="eq tbd">Por definir</div>`;
+  const cls = s.w? (s.w===t?'win':'lose') : '';
+  return `<div class="eq ${cls}"><span>${logo(t)}${t}${chip(t)}</span><span>${ladoGoles??''}</span></div>`;
+}
+function tarjeta(s){
+  if(!s.A||!s.B) return `<div class="serie"><div class="eq tbd">Por definir</div><div class="eq tbd">Por definir</div></div>`;
+  const m = marcadores[s.id]||[[],[]];
+  const v=(l,k)=> (m[l][k]??'');
+  const inp=(l,k)=>`<input type="number" min="0" data-id="${s.id}" data-l="${l}" data-k="${k}" value="${v(l,k)}">`;
+  return `<div class="serie">
+    ${filaEq(s.A,s,s.ga)}${filaEq(s.B,s,s.gb)}
+    <div class="marcador"><span></span><b>${logo(s.A)}</b><b>${logo(s.B)}</b>
+      <span>Ida</span>${inp(0,0)}${inp(0,1)}
+      <span>Vuelta</span>${inp(1,0)}${inp(1,1)}</div>
+    <div class="agg">${s.w? 'Avanza: '+s.w+(s.desempate?' (mejor ubicado)':'') : 'Serie en juego'} · vuelta en casa de ${s.A}</div>
+  </div>`;
+}
+function pintarBracket(){
+  if(equipos.length!==8){ $('bracket').innerHTML='<p>Captura 8 equipos.</p>'; return; }
+  const r=calcular();
+  $('bracket').innerHTML =
+   `<div class="col"><h3>Cuartos de final</h3>${r.q.map(tarjeta).join('')}</div>
+    <div class="col"><h3>Semifinales</h3>${r.s.map(tarjeta).join('')}</div>
+    <div class="col"><h3>Final ${r.f.w?'🏆':''}</h3>${tarjeta(r.f)}${r.f.w?`<div class="serie center"><b>Campeón: ${r.f.w}</b>${chip(r.f.w)?'<br>Gana la quiniela: '+dueño(r.f.w):''}</div>`:''}</div>`;
+  document.querySelectorAll('#bracket input').forEach(el=>{
+    el.onchange = ()=>{
+      const {id,l,k}=el.dataset;
+      marcadores[id]=marcadores[id]||[[],[]];
+      marcadores[id][+l][+k]= el.value===''?'':Math.max(0,parseInt(el.value));
+      guardar(); pintarBracket(); pintar();
+    };
+  });
+}
+
+function pintar(){
+  const n = nombres();
+  $('resultados').innerHTML = n.map((nom,i)=>
+    `<div class="player"><h3>${nom}</h3>${asignados[i].map(t=>{
+      const e = equipos.length===8?estado(t):'vivo';
+      return `<div class="t ${e}">${logo(t)}${e==='champ'?'🏆':e==='out'?'❌':''} ${t}${e==='champ'?' (CAMPEÓN)':''}</div>`;}).join('')}</div>`).join('');
+  $('btnCopiar').disabled = pendientes.length>0 || asignados.flat().length===0;
+  if(equipos.length===8) guardar();
+}
+
+function reiniciar(){
+  leerEquipos();
+  pendientes = mezclar([...equipos]);
+  asignados = [[],[],[],[]]; turno = 0;
+  $('actual').textContent = equipos.length===8 ? 'Listo para sortear' : '⚠ Debes tener exactamente 8 equipos ('+equipos.length+')';
+  pintar(); pintarBracket();
+}
+
+function girar(){
+  return new Promise(res=>{
+    let c=0; const max=15;
+    const iv=setInterval(()=>{
+      $('actual').textContent = equipos[rnd(equipos.length)];
+      if(++c>=max){clearInterval(iv);res();}
+    },80);
+  });
+}
+
+async function siguiente(){
+  if(ocupado || equipos.length!==8) return;
+  if(!pendientes.length){ $('actual').textContent='¡Sorteo terminado!'; return; }
+  ocupado = true;
+  await girar();
+  const eq = pendientes.pop();
+  const idx = turno % 4; turno++;
+  asignados[idx].push(eq);
+  $('actual').textContent = `${eq} → ${nombres()[idx]}`;
+  pintar(); pintarBracket();
+  ocupado = false;
+  if(!pendientes.length) $('actual').textContent += '  ✅ ¡Terminado!';
+}
+
+$('btnPaso').onclick = siguiente;
+$('btnTodo').onclick = async()=>{ while(pendientes.length) await siguiente(); };
+$('btnReset').onclick = reiniciar;
+$('equiposTxt').oninput = reiniciar;
+[0,1,2,3].forEach(i=>$('p'+i).oninput=()=>{pintar();pintarBracket();});
+$('modo').onchange=()=>{guardar();pintarBracket();pintar();};
+$('btnLimpiar').onclick=()=>{if(confirm('¿Borrar todos los marcadores?')){marcadores={};guardar();pintarBracket();pintar();}};
+$('btnCopiar').onclick = ()=>{
+  const n=nombres();
+  const txt = n.map((nom,i)=>`${nom}: ${asignados[i].join(' y ')}`).join('\n');
+  navigator.clipboard.writeText('Sorteo Quiniela Liga MX\n'+txt);
+  $('btnCopiar').textContent='¡Copiado!'; setTimeout(()=>$('btnCopiar').textContent='Copiar resultados',1500);
+};
+if(!cargar()) reiniciar(); else { $('actual').textContent = pendientes.length? 'Sorteo en curso' : '✅ Sorteo realizado'; pintar(); pintarBracket(); }
+
+// ======== Mostrar / ocultar cruces y marcadores ========
+const KEY_VIS='quinielaLigaMX_oculto';
+function aplicarVisibilidad(){
+  const oc = localStorage.getItem(KEY_VIS)==='1';
+  $('liguillaBody').classList.toggle('oculto', oc);
+  $('liguillaOculta').classList.toggle('oculto', !oc);
+  $('btnOcultar').textContent = oc ? '👁 Mostrar cruces y marcadores' : '🙈 Ocultar cruces y marcadores';
+}
+$('btnOcultar').onclick = ()=>{
+  localStorage.setItem(KEY_VIS, localStorage.getItem(KEY_VIS)==='1' ? '0' : '1');
+  aplicarVisibilidad();
+};
+aplicarVisibilidad();
+</script>
+</body>
+</html>
